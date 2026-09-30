@@ -14,7 +14,7 @@ function ProtectedLayout() {
   return (
     <>
       <Navbar />
-      <Container sx={{ py: 3 }}>
+        <Container sx={{ py: { xs: 2, sm: 3 } }}>
         <Outlet />
       </Container>
     </>

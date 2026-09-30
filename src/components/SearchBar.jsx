@@ -8,6 +8,7 @@ export default function SearchBar({ value, onChange }) {
       placeholder="Type a movie name…"
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3 } }}
     />
   );
 }

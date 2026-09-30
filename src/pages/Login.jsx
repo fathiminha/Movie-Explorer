@@ -25,7 +25,7 @@ export default function Login() {
 
   return (
     <Box sx={{ minHeight: "100vh", display: "grid", placeItems: "center", p: 2 }}>
-      <Paper component="form" onSubmit={handleSubmit} sx={{ p: 4, width: "100%", maxWidth: 400, display: "grid", gap: 2 }}>
+      <Paper component="form" onSubmit={handleSubmit} sx={{ p: { xs: 3, sm: 4 }, width: "100%", maxWidth: 400, display: "grid", gap: 2 }}>
         <Typography variant="h5">Log in to Movie Explorer</Typography>
         {error && <Alert severity="error">{error}</Alert>}
         <TextField label="Username" value={username} onChange={(e) => setUsername(e.target.value)} autoFocus />
