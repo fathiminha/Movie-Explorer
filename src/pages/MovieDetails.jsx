@@ -28,7 +28,7 @@ const BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280";
 const PROFILE_BASE = "https://image.tmdb.org/t/p/w185";
 const SERIF = '"Playfair Display", Georgia, "Times New Roman", serif';
 
-/* Section heading with the purple bar on the left */
+/* Section heading*/
 function SectionTitle({ children, accent, action }) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
@@ -200,7 +200,7 @@ export default function MovieDetails() {
           </Button>
         </Box>
 
-        {/* ── Hero ── */}
+        {/* Hero */}
         <Box sx={{ display: "flex", gap: { xs: 3, md: 4 }, flexDirection: { xs: "column", sm: "row" }, alignItems: { xs: "center", sm: "flex-start" } }}>
           {movie.poster_path && (
             <Box
@@ -221,7 +221,20 @@ export default function MovieDetails() {
           <Stack spacing={2} sx={{ minWidth: 0, width: "100%", maxWidth: 720 }}>
             <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
               {movie.genres.map((g) => (
-                <Chip key={g.id} label={g.name} size="small" sx={{ ...glass, fontWeight: 500, borderRadius: 99 }} />
+                <Chip
+                  key={g.id}
+                  label={g.name}
+                  size="small"
+                  onClick={() => navigate(`/?genre=${g.id}`)}
+                  sx={{
+                    ...glass,
+                    fontWeight: 500,
+                    borderRadius: 99,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    "&:hover": { bgcolor: alpha(accent, 0.12), borderColor: alpha(accent, 0.4) }
+                  }}
+                />
               ))}
             </Box>
 
@@ -297,7 +310,7 @@ export default function MovieDetails() {
           </Stack>
         </Box>
 
-        {/* ── Content: left column + details card ── */}
+        {/*  Content */}
         <Box sx={{ display: "grid", gap: { xs: 4, md: 5 }, gridTemplateColumns: { xs: "minmax(0,1fr)", md: "minmax(0,1fr) 340px" }, alignItems: "start" }}>
           <Stack spacing={4} sx={{ minWidth: 0 }}>
             {trailer && (
@@ -369,7 +382,7 @@ export default function MovieDetails() {
             </Box>
           </Stack>
 
-          {/* ── Right column ── */}
+          {/*  Right column  */}
           <Stack spacing={3} sx={{ minWidth: 0 }}>
             <Box sx={{ ...glass, borderRadius: 3, p: 3 }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>

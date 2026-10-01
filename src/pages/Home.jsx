@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Typography, Alert, Box, Stack, Button, Skeleton, alpha, useTheme, Grid,
 } from "@mui/material";
 import SearchBar from "../components/SearchBar";
+import FilterBar from "../components/FilterBar";
 import MovieGrid from "../components/MovieGrid";
-import { getTrending, searchMovies, errorMessage } from "../api/tmdb";
+import { getTrending, searchMovies, discoverMovies, getGenres, errorMessage } from "../api/tmdb";
 import { useApp } from "../context/AppContext";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -50,24 +52,32 @@ export default function Home() {
       backgroundColor: isDark ? "#07080d" : "#f4f6fb",
       backgroundImage: isDark
         ? [
-            "radial-gradient(60% 50% at 15% 0%, rgba(99,102,241,0.22) 0%, transparent 70%)",
-            "radial-gradient(50% 45% at 90% 8%, rgba(236,72,153,0.12) 0%, transparent 70%)",
-            "radial-gradient(70% 50% at 50% 100%, rgba(14,165,233,0.12) 0%, transparent 70%)",
-            "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.35) 100%)",
-            "linear-gradient(180deg, #0b0d16 0%, #07080d 100%)",
-          ].join(",")
+          "radial-gradient(60% 50% at 15% 0%, rgba(99,102,241,0.22) 0%, transparent 70%)",
+          "radial-gradient(50% 45% at 90% 8%, rgba(236,72,153,0.12) 0%, transparent 70%)",
+          "radial-gradient(70% 50% at 50% 100%, rgba(14,165,233,0.12) 0%, transparent 70%)",
+          "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.35) 100%)",
+          "linear-gradient(180deg, #0b0d16 0%, #07080d 100%)",
+        ].join(",")
         : [
-            "radial-gradient(60% 50% at 15% 0%, rgba(99,102,241,0.14) 0%, transparent 70%)",
-            "radial-gradient(50% 45% at 90% 8%, rgba(236,72,153,0.08) 0%, transparent 70%)",
-            "radial-gradient(70% 50% at 50% 100%, rgba(14,165,233,0.10) 0%, transparent 70%)",
-            "linear-gradient(180deg, #f8f9fd 0%, #eef1f8 100%)",
-          ].join(","),
+          "radial-gradient(60% 50% at 15% 0%, rgba(99,102,241,0.14) 0%, transparent 70%)",
+          "radial-gradient(50% 45% at 90% 8%, rgba(236,72,153,0.08) 0%, transparent 70%)",
+          "radial-gradient(70% 50% at 50% 100%, rgba(14,165,233,0.10) 0%, transparent 70%)",
+          "linear-gradient(180deg, #f8f9fd 0%, #eef1f8 100%)",
+        ].join(","),
     };
   };
 
   const { lastSearch, setLastSearch } = useApp();
-  const [input, setInput] = useState(lastSearch);
-  const [query, setQuery] = useState(lastSearch);
+
+  // Read genre from URL if navigating from Movie Details
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlGenre = searchParams.get("genre");
+
+  // If we arrived via a genre link, ignore previous lastSearch text
+  const initialSearch = urlGenre ? "" : lastSearch;
+
+  const [input, setInput] = useState(initialSearch);
+  const [query, setQuery] = useState(initialSearch);
   const [movies, setMovies] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -75,24 +85,78 @@ export default function Home() {
   const [error, setError] = useState("");
   const sentinel = useRef(null);
 
+  // New state for filtering
+  const [filters, setFiltersState] = useState({ genre: urlGenre || "", year: "", rating: "" });
+  const [genres, setGenres] = useState([]);
+
+  // Fetch genres on mount
+  useEffect(() => {
+    getGenres().then(setGenres).catch(console.error);
+  }, []);
+
+  // Keep URL updated with genre for sharing, and clear it when genre is cleared
+  useEffect(() => {
+    if (filters.genre) setSearchParams({ genre: filters.genre });
+    else setSearchParams({});
+  }, [filters.genre, setSearchParams]);
+
+  // Wrapper to update filters and reset pagination safely
+  const setFilters = (newFilters) => {
+    setFiltersState(newFilters);
+    setMovies([]);
+    setPage(1);
+  };
+
   // Wait 500ms after typing stops, then start a fresh search & save it.
   useEffect(() => {
     const t = setTimeout(() => {
       const q = input.trim();
-      setQuery(q);
-      setLastSearch(q);
-      setMovies([]);
-      setPage(1);
+      // Only reset if the query actually changed
+      if (q !== query) {
+        setQuery(q);
+        setLastSearch(q);
+        setMovies([]);
+        setPage(1);
+      }
     }, 500);
     return () => clearTimeout(t);
-  }, [input, setLastSearch]);
+  }, [input, query, setLastSearch]);
 
-  // Load trending (no query) or search results for the current page.
+  // Load trending, discover, or search results for the current page.
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError("");
-    (query ? searchMovies(query, page) : getTrending(page))
+
+    let fetchPromise;
+    if (query) {
+      // TMDb search API doesn't support filters natively, apply on client-side
+      fetchPromise = searchMovies(query, page).then((d) => {
+        let filtered = d.results;
+        if (filters.genre) {
+          filtered = filtered.filter((m) => m.genre_ids?.includes(Number(filters.genre)));
+        }
+        if (filters.year) {
+          filtered = filtered.filter((m) => m.release_date?.startsWith(String(filters.year)));
+        }
+        if (filters.rating) {
+          filtered = filtered.filter((m) => m.vote_average >= Number(filters.rating));
+        }
+        return { ...d, results: filtered };
+      });
+    } else if (filters.genre || filters.year || filters.rating) {
+      // If we have filters but no query, use discover API
+      const discoverParams = {};
+      if (filters.genre) discoverParams.with_genres = filters.genre;
+      if (filters.year) discoverParams.primary_release_year = filters.year;
+      if (filters.rating) discoverParams["vote_average.gte"] = filters.rating;
+      fetchPromise = discoverMovies(discoverParams, page);
+    } else {
+      // Default to trending
+      fetchPromise = getTrending(page);
+    }
+
+    fetchPromise
       .then((d) => {
         if (cancelled) return;
         setMovies((prev) => (page === 1 ? d.results : [...prev, ...d.results.filter((r) => !prev.some((p) => p.id === r.id))]));
@@ -101,7 +165,7 @@ export default function Home() {
       .catch((e) => !cancelled && setError(errorMessage(e)))
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
-  }, [query, page]);
+  }, [query, page, filters]);
 
   // Infinite scroll
   useEffect(() => {
@@ -120,19 +184,37 @@ export default function Home() {
   const accent = isDark ? "#a78bfa" : "#6c63ff";
   const isFirstPageLoading = loading && movies.length === 0;
 
+  // Dynamic heading text based on current state
+  let headingText = "Trending This Week";
+  let subtitleText = "Discover what everyone is watching right now";
+  if (query) {
+    headingText = `Results for "${query}"`;
+    subtitleText = "Showing the best matches from TMDb";
+  } else if (filters.genre) {
+    const genreName = genres.find((g) => String(g.id) === String(filters.genre))?.name || "Genre";
+    headingText = `${genreName} Movies`;
+    subtitleText = "Discover movies in this genre";
+  } else if (filters.year || filters.rating) {
+    headingText = "Filtered Movies";
+    subtitleText = "Movies matching your criteria";
+  }
+
   return (
     <>
       <Box aria-hidden="true" sx={backgroundSx} />
       <Stack spacing={{ xs: 2.5, sm: 3 }}>
-        {/* Search bar */}
+        {/* Search bar & Filters */}
         <Box sx={{ animation: "fadeInUp 0.5s ease both" }}>
           <SearchBar value={input} onChange={setInput} />
+          <Box sx={{ mt: 2 }}>
+            <FilterBar genres={genres} filters={filters} setFilters={setFilters} />
+          </Box>
         </Box>
 
         {/* Section heading */}
         <Box sx={{ animation: "fadeInUp 0.5s ease both", animationDelay: "0.1s" }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.2, mb: 0.3 }}>
-            {query ? (
+            {query || filters.genre || filters.year || filters.rating ? (
               <SearchRoundedIcon sx={{ color: accent, fontSize: 26 }} />
             ) : (
               <TrendingUpRoundedIcon sx={{ color: accent, fontSize: 26 }} />
@@ -146,7 +228,7 @@ export default function Home() {
                 overflowWrap: "anywhere",
               }}
             >
-              {query ? `Results for "${query}"` : "Trending This Week"}
+              {headingText}
             </Typography>
           </Box>
           <Typography
@@ -158,9 +240,7 @@ export default function Home() {
               mt: -0.3,
             }}
           >
-            {query
-              ? "Showing the best matches from TMDb"
-              : "Discover what everyone is watching right now"}
+            {subtitleText}
           </Typography>
         </Box>
 
@@ -260,7 +340,7 @@ export default function Home() {
               No movies found
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Try a different title or check your spelling
+              Try a different title or adjust your filters
             </Typography>
           </Box>
         )}

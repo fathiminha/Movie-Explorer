@@ -13,6 +13,21 @@ api.interceptors.request.use((config) => {
 export const getTrending = (page = 1) =>
   api.get("/trending/movie/week", { params: { page } }).then((r) => r.data);
 
+// Fetch movie genres
+export const getGenres = () =>
+  api.get("/genre/movie/list").then((r) => r.data.genres);
+
+// Discover movies with filters (year, genre, rating)
+export const discoverMovies = (filters, page = 1) =>
+  api.get("/discover/movie", { 
+    params: { 
+      ...filters, 
+      page, 
+      sort_by: "popularity.desc", 
+      "vote_count.gte": 50 
+    } 
+  }).then((r) => r.data);
+
 export const searchMovies = (query, page = 1) =>
   api.get("/search/movie", { params: { query, page } }).then((r) => r.data);
 
