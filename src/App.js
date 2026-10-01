@@ -14,7 +14,13 @@ function ProtectedLayout() {
   return (
     <>
       <Navbar />
-        <Container sx={{ py: { xs: 2, sm: 3 } }}>
+      <Container
+        maxWidth="xl"
+        sx={{
+          py: { xs: 2, sm: 3 },
+          px: { xs: 1.5, sm: 3 },
+        }}
+      >
         <Outlet />
       </Container>
     </>
