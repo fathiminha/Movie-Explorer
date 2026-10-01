@@ -100,9 +100,15 @@ src/
 
 | Home Page (Dark Mode) | Movie Details |
 |:---:|:---:|
-| *(Add screenshot here)* | *(Add screenshot here)* |
+| <img src="./public/screenshots/home.png" alt="Home Page" width="400"/> | <img src="./public/screenshots/details.png" alt="Movie Details" width="400"/> |
 | **Filters & Search** | **Favorites List** |
-| *(Add screenshot here)* | *(Add screenshot here)* |
+| <img src="./public/screenshots/filters.png" alt="Filters and Search" width="400"/> | <img src="./public/screenshots/favorites.png" alt="Favorites List" width="400"/> |
+
+**Active Genre Filter**  
+<img src="./public/screenshots/comedy-movies.png" alt="Comedy Movies Filter" width="400"/>
+
+**Light Mode Interface**  
+<img src="./public/screenshots/light-mode.png" alt="Light Mode Interface" width="400"/>
 
 ##  Deployment
 
