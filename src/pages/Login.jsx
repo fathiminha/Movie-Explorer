@@ -66,16 +66,25 @@ export default function Login() {
     e.currentTarget.style.setProperty("--y", `${e.clientY - r.top}px`);
   };
 
+  const DEMO_USERNAME = "user";
+  const DEMO_PASSWORD = "User@123";
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const errs = {};
     if (!username.trim()) errs.username = "Enter your username";
-    if (password.length < 4) errs.password = "Password must be at least 4 characters";
-    setErrors(errs);
+    if (!password) errs.password = "Enter your password";
     if (Object.keys(errs).length) {
+      setErrors(errs);
       setShake(true);
       return;
     }
+    if (username.trim() !== DEMO_USERNAME || password !== DEMO_PASSWORD) {
+      setErrors({ general: "Invalid username or password." });
+      setShake(true);
+      return;
+    }
+    setErrors({});
     setLoading(true);
     setTimeout(() => {
       login(username.trim());
@@ -222,14 +231,13 @@ export default function Login() {
               {loading ? (<><CircularProgress size={20} color="inherit" sx={{ mr: 1 }} /> Signing in…</>) : "Sign In"}
             </Button>
 
-            <Button
-              onClick={() => { setUsername("demo"); setPassword("demo1234"); setErrors({}); }}
-              sx={{ color: "rgba(255,255,255,0.7)", textTransform: "none", "&:hover": { color: "#a78bfa" } }}
-            >
-              Use demo account
-            </Button>
+            {errors.general && (
+              <Typography variant="body2" sx={{ textAlign: "center", color: "#f87171", fontWeight: 500, mt: -0.5 }}>
+                {errors.general}
+              </Typography>
+            )}
             <Typography variant="caption" sx={{ textAlign: "center", color: "rgba(255,255,255,0.45)" }}>
-              Demo login: any username and a password of 4+ characters
+              User credentials: Username: user | Password: User@123
             </Typography>
           </Box>
         </Box>
