@@ -17,7 +17,18 @@ A modern, visually stunning React application that allows users to discover tren
 - **Light & Dark Mode**: Full support for both light and dark themes (defaults to Dark Mode), remembering user preferences.
 - **Responsive Layout**: A mobile-first design approach ensuring the app looks and works perfectly on phones, tablets, and desktops (including a custom mobile navigation drawer).
 - **Graceful Error Handling**: Friendly empty states and error messages if API requests fail or if a search yields no results.
-- **Front-end Login**: A simple mock login gateway (requires a 4+ character password) to protect the main application view.
+- **Front-end Login**: A fixed-credential demo login gateway to protect the main application view.
+
+## 🔐 Login Credentials
+
+This is a portfolio/demo application that uses fixed client-side credentials for the login gateway.
+
+| Field    | Value      |
+|----------|------------|
+| Username | `user`     |
+| Password | `User@123` |
+
+> **Note:** These credentials are stored in the frontend source code and are not production-secure. They are intended for demonstration purposes only.
 
 ## Technologies Used
 
